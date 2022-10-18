@@ -1,0 +1,36 @@
+pipeline{
+    agent any;
+    
+    tools{
+        maven 'maven3.6.2'
+    }
+    
+    stages{
+        
+        stage('git'){
+        steps{
+            git branch: 'development', credentialsId: 'c86aadd8-9d7c-4d1f-9bbc-eb963f3a36f8', url: 'https://github.com/hemanakumar/maven-web-application.git'
+        }
+        }
+        
+        stage('build'){
+            steps{
+                sh "mvn clean package"
+            }
+        }
+        
+        stage('nexus'){
+            steps{
+                sh "mvn deploy"
+            }
+        }
+        
+        stage('tomcat'){
+            steps{
+                sshagent(['6e6e6666-5098-41f1-bf9b-47cd9eda16f6']) {
+                    sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@13.114.31.57:/opt/apache-tomcat-9.0.68/webapps"
+                }
+            }
+        }
+    }
+}
